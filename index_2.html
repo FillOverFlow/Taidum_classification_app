@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello Electron</title>
+    
+
+  <style>
+  .container{
+    background-color:greenyellow;
+  }
+  .crop-wrapper {
+  
+    
+    position:relative;
+    width:100%;
+    height:90vh;
+    overflow:hidden;
+  }
+
+  .resize-container {
+      position: relative;
+      display: inline-block;
+      cursor: move;
+      margin: 0 auto;
+  }
+
+  .resize-container-ontop {
+    position:absolute;
+    cursor:move;
+    background-color:rgba(5,255,5,0);
+    z-index:1000;
+    width:100%;
+    height:100%;
+  }
+
+  .resize-container img {
+      display: block;
+  }
+
+  .resize-container:hover img,
+  .resize-container:active img {
+      outline: 2px dashed rgba(0,0,0,.9);
+  }
+
+  .resize-handle-ne,
+  .resize-handle-se,
+  .resize-handle-nw,
+  .resize-handle-sw {
+      position: absolute;
+      display: block;
+      width: 10px;
+      height: 10px;
+      background: rgba(0,0,0,.9);
+      z-index: 999;
+  }
+
+  .resize-handle-nw {
+      top: -5px;
+      left: -5px;
+      cursor: nw-resize;
+  }
+
+  .resize-handle-sw {
+      bottom: -5px;
+      left: -5px;
+      cursor: sw-resize;
+  }
+
+  .resize-handle-ne {
+      top: -5px;
+      right: -5px;
+      cursor: ne-resize;
+  }
+
+  .resize-handle-se {
+      bottom: -5px;
+      right: -5px;
+      cursor: se-resize;
+  }
+
+  .top-overlay {
+    z-index:990;
+    background-color: rgba(222,222,222,.6);
+    width:100%;
+    height:50%;
+    margin-top:-150px;
+    position:absolute;
+  }
+
+  .bottom-overlay {
+    z-index:990;
+    background-color: rgba(222,222,222,.6);
+    width:100%;
+    height:50%;
+    margin-bottom:-150px;
+    position:absolute;
+    bottom:0;
+  }
+
+  .right-overlay {
+    z-index:990;
+    background-color: rgba(222,222,222,.6);
+    width:50%;
+    height:300px;
+    top:50%;
+    margin-top:-150px;
+    margin-left:-150px;
+    position:absolute;
+  }
+
+  .left-overlay {
+    z-index:990;
+    background-color: rgba(222,222,222,.6);
+    width:50%;
+    height:300px;
+    top:50%;
+    right:0px;
+    margin-top:-150px;
+    margin-right:-150px;
+    position:absolute;
+  }
+
+
+
+  .overlay {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -150px;
+    margin-top: -150px;
+    z-index: 999;
+    width: 75px;
+    height: 75px;
+      border: solid 2px rgba(222,222,222,.9);
+    box-sizing: content-box;
+    pointer-events: none;
+  }
+
+  .overlay:before {
+    top: 0;
+    margin-left: -2px;
+    margin-top: -40px;
+  }
+
+  .overlay:after {
+    bottom: 0;
+    margin-left: -2px;
+    margin-bottom: -40px;
+  }
+
+
+  .overlay-inner:before {
+    left: 0;
+    margin-left: -40px;
+    margin-top: -2px;
+  }
+
+  .overlay-inner:after{
+    right: 0;
+    margin-right: -40px;
+    margin-top: -2px;
+  }
+
+  .btn {
+    padding: 6px 10px;
+    background-color: rgb(222,60,80);
+    border: none;
+    border-radius: 5px;
+    color: #FFF;
+    margin:10px 5px;
+    line-height:30px;
+  }
+
+  .btn-crop img {
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+
+  /* Loading style */
+  .loader {
+  
+  border: 16px solid white;
+  border-radius: 50%;
+  border-top: 16px solid black;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+  display: none;
+ 
+  
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* End Loading screen  */
+  </style>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="js/jquery.min.js"></script>
+  <script src="js/jquery.Jcrop.js"></script>
+  <link rel="stylesheet" href="css/jquery.Jcrop.css" type="text/css" />
+  <script src="JS_link/capture_image.js"></script>
+  <script src="JS_link/predict_taidum.js"></script>
+  
+  </head>
+  
+  <body>
+    <div class="container">
+      <div class="jumbotron">
+        <h1>Taidum Classification</h1>
+        <p>โปรแกรม สำหรับการทดสอบการเรียนรู้ตัวอักษรไทดำ</p>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          
+          
+              
+              
+              
+              
+            
+        
+              <center>
+              <h2>ใช้งานง่าย ๆ ตามขั้นตอนดังนี้</h2>
+              <h2>1.ถ่ายรูปเอกสาร</h2>
+              <div class="row">
+                
+                <div class="col-md-12">
+                    <video id="video" width="640" height="480" autoplay></video>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-12">
+                    <button id="snap" class="btn btn-primary">ถ่ายรูปเอกสาร</button>
+                </div>
+              </div>
+              <hr>
+              <br>
+              <div class="row">
+                <div class="col-md-12">
+                    
+                </div>
+                <h2>2.เลือกเพื่อ Save file ภาพที่เราถ่าย</h2>
+                <div class="col-md-12">
+                  <h2><a href="#" class="button" id="btn-download2" download="my-file-name.png">เลือกไฟล์รูปภาพนี้</a></h2> 
+                </div>
+                  
+              </div>
+              <hr>
+              <br>
+              
+              <h2>3.crop รูปภาพเพื่อทำการตรวจสอบ</h2>
+              <div class="row">
+                <div class="col-sm-6">
+                    <canvas id="canvas_target" width="640" height="480">
+                        <!-- image for crop  -->
+     
+                      </canvas>
+                      <form id="coords"
+                      class="coords"
+                      onsubmit="return false;"
+                      action="http://example.com/post.php">
+                  
+                      <div class="inline-labels">
+                      <label>X1 <input type="text" size="4" id="x1" name="x1" /></label>
+                      <label>Y1 <input type="text" size="4" id="y1" name="y1" /></label>
+                      <label>X2 <input type="text" size="4" id="x2" name="x2" /></label>
+                      <label>Y2 <input type="text" size="4" id="y2" name="y2" /></label>
+                      <label>W <input type="text" size="4" id="w" name="w" /></label>
+                      <label>H <input type="text" size="4" id="h" name="h" /></label>
+                      </div>
+                      <div><button class="btn btn-primary" onclick="crop()">Crop</button></div>
+                    </form>
+                </div>
+                <div class="col-sm-6">
+                  <div class="row">
+                      <canvas id="canvas_crop" width="181" height="143">
+                          <!-- image cropped -->
+                      </canvas>
+                  </div>
+                  <div class="row">
+                      <button id="btn-download-crop"   onclick="save_image_crop()" class="btn btn-primary"  download="predict.jpeg" >ตรวจสอบลายมือ</button>
+                      <button class="btn btn-danger" onclick="clearImage()">clear</button>
+                  </div>
+                 
+                 
+                </div>
+                
+              
+              </div>
+              <div class="row ">
+                 
+                <div class="col-xs-12">
+                  
+                 
+                
+                </div>
+              </div>
+              <br>
+              <div class="row">
+                  <div class="col-md-12">
+                    <h2 id="selected-file"  style="color:black">You selected:</h2>
+                   <input type="hidden" id="path-value">
+                  </div>
+                </div>
+              <br>
+              <h2>4.แสดงผลลัพธ์</h2>
+              <div class="row">
+                <div class="col-sm-12"><h4>ภาพที่เราเลือก</h4><canvas id="image_for_predict" width="300" height="300"></canvas></div>
+                
+               
+              </div>
+              
+              
+              <div class="row">
+                <div class="col-sm-12"><h4 id="word_procress">...</h4><div class="loader" id="loader"></div></div>
+                <div class="col-md-12">
+                  <h3 style="color:black" id="result_predict">ผลลัพธ์</h3>
+                </div>
+                <div class="row">
+                  <div class="col-sm-4"><img id="top_predict_1" width="200px" height="200px" src="images/recognition.png" alt="ภาพไม่ขึ้น"><div><h2>อันดับที่ 1</h2></div><div><h2 id="score1">score1</h2></div></div>
+                  <div class="col-sm-4"><img id="top_predict_2" width="200px" height="200px" src="images/recognition.png" alt="ภาพไม่ขึ้น"><div><h2>อันดับที่ 2</h2></div><div><h2 id="score2">score2</h2></div></div>
+                  <div class="col-sm-4"><img id="top_predict_3" width="200px" height="200px" src="images/recognition.png" alt="ภาพไม่ขึ้น"><div><h2>อันดับที่ 3</h2></div><div><h2 id="score3">score3</h2></div></div>
+                </div>
+
+              </div>
+            </center>
+            
+        
+          
+          
+        </div>
+      </div>
+    </div>
+  </body>
+  
+  <script type="text/javascript">
+    require('./JS_link/openfile_render_procress.js')
+    require('./JS_link/predict_taidum.js')
+  </script>
+  <!-- Script for camera snapshot and dowload image -->
+   <script>
+      var video = document.getElementById('video');
+       // Get access to the camera!
+      if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          // Not adding `{ audio: true }` since we only want video now
+          navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+              //video.src = window.URL.createObjectURL(stream);
+              video.srcObject = stream;
+              video.play();
+          });
+      }
+      // Elements for taking the snapshot
+      var canvas = document.getElementById('canvas_target');
+      var context = canvas.getContext('2d');
+      var video = document.getElementById('video');
+      
+
+      // Trigger photo take
+      var snap = document.getElementById('snap');
+      snap.addEventListener("click", function() {
+          context.drawImage(video, 0, 0, 640, 480);
+     
+          
+      });
+     
+      //Save image capture
+      var button_dowload = document.getElementById('btn-dowload2');
+      
+      button_dowload.addEventListener('click',function(e){
+        console.log('dowload fucntion active...')
+        var dataURL = canvas.toDataURL('image/png');
+        button_dowload.href = dataURL; 
+      })
+     
+   
+  </script>
+  <!-- Script for crop image and save  -->
+  <script type="text/javascript">
+
+    jQuery(function($){
+  
+      var jcrop_api;
+  
+      $('#canvas_target').Jcrop({
+        onChange:   showCoords,
+        onSelect:   showCoords,
+        onRelease:  clearCoords
+      },function(){
+        jcrop_api = this;
+      });
+  
+      $('#coords').on('change','input',function(e){
+        var x1 = $('#x1').val(),
+            x2 = $('#x2').val(),
+            y1 = $('#y1').val(),
+            y2 = $('#y2').val();
+        jcrop_api.setSelect([x1,y1,x2,y2]);
+      });
+  
+    });
+  
+  
+  
+   
+    function clearImage()
+    {
+      canvas_crop = document.getElementById("canvas_crop")
+      context = canvas_crop.getContext('2d')
+      console.log("clear image!!")
+      context.clearRect(0, 0, 1200, 1000)
+    }
+    // Simple event handler, called from onChange and onSelect
+    // event handlers, as per the Jcrop invocation above
+    function showCoords(c)
+    {
+      $('#x1').val(c.x);
+      $('#y1').val(c.y);
+      $('#x2').val(c.x2);
+      $('#y2').val(c.y2);
+      $('#w').val(c.w);
+      $('#h').val(c.h);
+    };
+  
+    function clearCoords()
+    {
+      $('#coords input').val('');
+    };
+  
+    crop = function(){
+      console.log('Crop fucntion Active!!!')
+      var x1 = $('#x1').val(),
+            x2 = $('#x2').val(),
+            y1 = $('#y1').val(),
+            y2 = $('#y2').val();
+            width = $("#w").val();
+            height = $("#h").val();
+      
+      var target = document.getElementById('canvas_target');
+      
+      var crop_canvas = document.getElementById('canvas_crop');
+      var context_canvas_crop = canvas_crop.getContext('2d');
+      
+      var canvas_choose_predict = document.getElementById("image_for_predict");
+      var context_choose_predict = canvas_choose_predict.getContext('2d');
+
+      var left = x2-width
+      var top  = y2-height
+  
+      context_canvas_crop.drawImage(target,left,top,width,height,0,0,width,height);
+      context_choose_predict.drawImage(target,left,top,width,height,0,0,width,height);
+      // console.log('left',left)
+      // console.log('top',top)
+      // console.log('weight:',width);
+      // console.log('height:',height);
+     
+     
+      // console.log('crop funtion ... is success');
+    }
+  
+  
+  
+  </script>
+</html>
+
